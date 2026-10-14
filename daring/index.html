@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pedido Daring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky search header · product cards (one per flavor/variant) grouped by catalog family · fixed order bar + review drawer */
+:root{
+  --bg:#f4f6f9; --surface:#ffffff; --ink:#17202b; --muted:#66707d; --line:#dde3eb;
+  --accent:#0f6e6e; --accent-ink:#ffffff; --accent-soft:#e0f1f1; --ok:#1f7a4a;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12161c; --surface:#1b212a; --ink:#eef2f7; --muted:#97a1ad; --line:#2d3643;
+  --accent:#5fd0cc; --accent-ink:#1a0d0f; --accent-soft:#143433; --ok:#5fcf93; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161c; --surface:#1b212a; --ink:#eef2f7; --muted:#97a1ad; --line:#2d3643;
+  --accent:#5fd0cc; --accent-ink:#1a0d0f; --accent-soft:#143433; --ok:#5fcf93; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);font-size:15px;line-height:1.4;padding-bottom:96px}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-block:14px 8px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.01em;margin:0;text-transform:uppercase;text-wrap:balance}
+h1 span{color:var(--accent)}
+.meta{color:var(--muted);font-size:13px}
+.search{display:flex;gap:8px;padding-block:4px 8px}
+.search input[type=search]{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.toggle{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;color:var(--muted);padding-inline:4px;cursor:pointer}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-block:2px 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{padding-block:14px}
+.sec{padding-block:10px 18px}
+.sec h2{font-family:var(--display);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.02em;margin:6px 0 10px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;text-wrap:balance}
+.sec h2 small{font-family:var(--body);font-weight:500;font-size:13px;text-transform:none;letter-spacing:0;color:var(--muted)}
+.sec h2 .pgl{border:0;background:none;padding:0;color:var(--accent);font:600 13px var(--body);cursor:zoom-in;text-transform:none;letter-spacing:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.sap{font:500 12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-variant-numeric:tabular-nums}
+.name{font-size:13.5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.card.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ph{aspect-ratio:1/1;background:#fff;display:flex;align-items:center;justify-content:center;padding:8px;border:0;cursor:zoom-in;width:100%}
+.ph img{max-width:100%;max-height:100%;object-fit:contain}
+.ph .ld{width:40%;aspect-ratio:1;border-radius:50%;background:var(--line);opacity:.5}
+.cb{padding:8px 10px 10px;display:flex;flex-direction:column;gap:6px;flex:1}
+.name{font-weight:600;line-height:1.25}
+.sub{color:var(--muted);font-size:13px;display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+.price{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink)}
+.step{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--bg);overflow:hidden;margin-top:auto}
+.step button{flex:none;width:40px;height:38px;border:0;background:none;font-size:20px;cursor:pointer;color:var(--accent)}
+.step button:disabled{color:var(--line);cursor:default}
+.step input{flex:1;min-width:0;width:40px;height:38px;border:0;text-align:center;background:none;font-variant-numeric:tabular-nums;font-weight:600;-moz-appearance:textfield}
+.step input::-webkit-inner-spin-button{-webkit-appearance:none}
+.card.on .step{border-color:var(--accent);background:var(--accent-soft)}
+.empty{padding:40px 0;text-align:center;color:var(--muted)}
+.oi .step{margin:0;width:128px}
+@media (max-width:420px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cb{padding:6px 8px 8px}}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--ink);color:var(--bg);padding-bottom:env(safe-area-inset-bottom,0px)}
+.bar .wrap{display:flex;align-items:center;gap:12px;padding-block:12px}
+.bar .sum{flex:1;min-width:0;font-variant-numeric:tabular-nums}
+.bar .sum b{font-family:var(--display);font-size:22px;letter-spacing:.02em}
+.bar .sum small{display:block;opacity:.75;font-size:12px}
+.btn{border:0;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(10,5,6,.55);display:flex;justify-content:flex-end}
+.drawer{width:min(560px,100%);height:100%;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line)}
+.dh h2{font-family:var(--display);font-size:22px;text-transform:uppercase;margin:0}
+.x{border:0;background:none;font-size:26px;cursor:pointer;color:var(--muted);line-height:1}
+.dl{flex:1;overflow:auto;padding:4px 16px}
+.oi{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:2px 12px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line)}
+.oi .price{min-width:80px}
+.df{border-top:1px solid var(--line);padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.total{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}
+.total b{font-family:var(--display);font-size:28px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.acts .btn{flex:1 1 140px}
+.msg{font-size:13px;color:var(--ok);min-height:1.2em}
+.confirm{display:flex;gap:8px;align-items:center;font-size:13px;flex-wrap:wrap}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(10,5,6,.85);display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
+.lb img{max-height:100%;max-width:100%;border-radius:6px}
+.disc{color:var(--muted);font-size:12px;padding-block:18px}
+@media (max-width:560px){h1{font-size:22px}}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s,box-shadow .15s}}
+</style>
+<style>input,select,textarea{font-size:16px!important}.step input{font-size:16px!important}</style>
+<style>
+.back{display:block;max-width:1240px;margin:0 auto;padding:10px 16px 0;font:600 13px system-ui;color:var(--muted);text-decoration:none}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-bottom:10px}
+.btn.sm{padding:7px 12px;font-size:13px}
+.rows{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:4px 14px;align-items:center;padding:8px 12px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row.on{background:var(--accent-soft)}
+.row .th{width:52px;height:52px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:2px;display:flex;align-items:center;justify-content:center;cursor:zoom-in}
+.row .th:empty{cursor:default;background:repeating-linear-gradient(45deg,var(--bg),var(--bg) 4px,var(--surface) 4px,var(--surface) 8px)}
+.row .th img{max-width:100%;max-height:100%;object-fit:contain}
+.row .name{font-weight:600;font-size:14px}
+.row .sub{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.code{font:500 12px ui-monospace,Menlo,monospace}
+.row .price{text-align:right;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
+.row .price small{color:var(--muted);font-weight:400;font-size:11px}
+.row .step{margin:0;width:128px}
+.tag{background:var(--accent);color:var(--accent-ink);border-radius:4px;padding:0 6px;font-size:11px;font-weight:600}
+.form{display:flex;flex-direction:column;gap:12px;padding:16px}
+.form label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:13px}
+.form input:not([type=file]),.form select{padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-weight:400}
+.form hr{border:0;border-top:1px solid var(--line);width:100%}
+.form h3{margin:0;font-size:15px}
+.hint{color:var(--muted);font-size:13px;margin:0}
+.ex{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.filebtn{display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+@media (max-width:640px){
+ .row{grid-template-columns:auto minmax(0,1fr) auto;padding:8px 10px}
+ .row .price{grid-column:2;grid-row:2;text-align:left}
+ .row .step{grid-column:3;grid-row:1/3;width:112px}
+ .row .th{grid-row:1/3;width:44px;height:44px}
+ .row:not(:has(.th)) .price{grid-column:1}
+}
+</style>
+
+<style>body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<a href="../" class="back">← Proveedores</a>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <h1>Pedido <span>Daring</span></h1>
+      <div class="meta" id="count"></div>
+    </div>
+    <div class="search">
+      <input type="search" id="q" placeholder="Buscar producto o código…" autocomplete="off">
+      <label class="toggle"><input type="checkbox" id="only"> Solo lo pedido</label>
+    </div>
+    <div class="chips" id="chips" role="toolbar" aria-label="Categorías"></div>
+    <div class="tools">
+      <button class="btn ghost sm" id="fill">Llenar con el último pedido</button>
+      <button class="btn ghost sm" id="addOpen">+ Agregar producto</button>
+      <label class="toggle"><input type="checkbox" id="pics" checked> Fotos</label>
+    </div>
+  </div>
+</header>
+<main class="wrap" id="list"></main>
+<div class="wrap disc">Lista armada con las facturas de Inversiones Daring del Cedral (Super Mercado y Distribuidora Astúa Pirie) del 05/ago al 07/oct/2026. El precio es el unitario de la última factura, sin IVA. Las fotos se buscan por código de barras en Open Food Facts y no todas existen. El pedido y los productos que agregues se guardan en este navegador.</div>
+<div class="bar"><div class="wrap">
+  <div class="sum"><b id="bTotal">₡0</b><small id="bInfo">Nada seleccionado aún</small></div>
+  <button class="btn" id="open" disabled>Revisar pedido</button>
+</div></div>
+
+<div class="overlay" id="ov" hidden>
+  <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="dt">
+    <div class="dh"><h2 id="dt">Tu pedido</h2><button class="x" id="close" aria-label="Cerrar">×</button></div>
+    <div class="dl" id="olist"></div>
+    <div class="df">
+      <div class="total"><span id="oInfo"></span><b id="oTotal">₡0</b></div>
+      <div class="acts">
+        <button class="btn" id="xlsx">Descargar Excel</button>
+        <button class="btn" id="pdf">Descargar PDF</button>
+        <button class="btn ghost" id="copy">Copiar para WhatsApp</button>
+      </div>
+      <div class="msg" id="msg" aria-live="polite"></div>
+      <div class="confirm" id="clearBox"></div>
+      <textarea id="fallback" hidden readonly rows="6" style="width:100%"></textarea>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="addOv" hidden>
+  <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="at">
+    <div class="dh"><h2 id="at">Agregar producto</h2><button class="x" id="addClose" aria-label="Cerrar">×</button></div>
+    <form class="dl form" id="addForm">
+      <label>Nombre del producto *<input id="fName" required placeholder="Ej. ROMA SPAGHETTI 3PACK N3 250G"></label>
+      <label>Código (opcional)<input id="fCode" inputmode="numeric" placeholder="Código de barras o del proveedor"></label>
+      <label>Categoría<select id="fCat"></select></label>
+      <label>Precio unitario sin IVA (opcional)<input id="fPrice" inputmode="decimal" placeholder="0"></label>
+      <button class="btn" type="submit">Guardar producto</button>
+      <div class="msg" id="addMsg" aria-live="polite"></div>
+      <hr>
+      <h3>Tus productos agregados</h3>
+      <div id="extraList"></div>
+      <p class="hint">Los productos agregados quedan guardados en este navegador. Para que aparezcan en todos los dispositivos, descarga el archivo y súbelo al repositorio como <code>daring/extra.json</code>.</p>
+      <div class="acts">
+        <button class="btn ghost" type="button" id="expExtra">Descargar extra.json</button>
+        <label class="btn ghost filebtn">Cargar archivo<input type="file" id="impExtra" accept=".json,application/json" hidden></label>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="lb" id="lb" hidden><img id="lbImg" alt=""></div>
+
+<script src="../lib/xlsx.full.min.js"></script>
+<script src="../lib/jspdf.umd.min.js"></script>
+<script src="../lib/jspdf.plugin.autotable.min.js"></script>
+<script>
+const BASE = [{"id":"764009024497","code":"764009024497","n":"BAMBOO DAIQUIRI 350ML LATA","c":"Cervezas y preparados","pu":737.17,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-30","veces":2,"prom":12.0},{"id":"764009057846","code":"764009057846","n":"BAMBOO MOJITO 350ML LT 4PK","c":"Cervezas y preparados","pu":2212.39,"des":0.0,"imp":13.0,"lq":3,"ld":"2026-08-10","veces":1,"prom":3.0},{"id":"764009011671","code":"764009011671","n":"BAMBOO MOJITO LATA 350 ML","c":"Cervezas y preparados","pu":737.17,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-30","veces":1,"prom":12.0},{"id":"764009820310","code":"764009820310","n":"BAMBOO RON COLA 350ML LATA","c":"Cervezas y preparados","pu":737.17,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-03","veces":1,"prom":12.0},{"id":"7500462981006","code":"7500462981006","n":"CUBA LIBRE 350 ML LATA","c":"Cervezas y preparados","pu":922.12,"des":0.0,"imp":13.0,"lq":48,"ld":"2026-09-30","veces":2,"prom":36.0},{"id":"764009055972","code":"764009055972","n":"IMPERIAL 473ML LT 5+1PK","c":"Cervezas y preparados","pu":4793.5,"des":0.0,"imp":13.0,"lq":8,"ld":"2026-09-30","veces":1,"prom":8.0},{"id":"764009010315","code":"764009010315","n":"IMPERIAL LATA 350ML","c":"Cervezas y preparados","pu":700.58,"des":0.0,"imp":13.0,"lq":240,"ld":"2026-09-30","veces":3,"prom":192.0},{"id":"764009010919","code":"764009010919","n":"IMPERIAL LATA 473 ML","c":"Cervezas y preparados","pu":958.7,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-03","veces":2,"prom":18.0},{"id":"764009027320","code":"764009027320","n":"IMPERIAL LATA 710ML","c":"Cervezas y preparados","pu":1179.94,"des":0.0,"imp":13.0,"lq":24,"ld":"2026-09-30","veces":3,"prom":24.0},{"id":"764009000668","code":"764009000668","n":"IMPERIAL LIGHT LATA 350ML","c":"Cervezas y preparados","pu":700.58,"des":0.0,"imp":13.0,"lq":96,"ld":"2026-08-10","veces":1,"prom":96.0},{"id":"764009027313","code":"764009027313","n":"IMPERIAL LIGHT LATA 710ML","c":"Cervezas y preparados","pu":1179.94,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-08-10","veces":1,"prom":12.0},{"id":"764009022608","code":"764009022608","n":"IMPERIAL LIGHT LITRO 1LT","c":"Cervezas y preparados","pu":1179.94,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-03","veces":1,"prom":12.0},{"id":"764009000651","code":"764009000651","n":"IMPERIAL LIGHT VIDRIO 350ML","c":"Cervezas y preparados","pu":707.96,"des":0.0,"imp":13.0,"lq":120,"ld":"2026-09-30","veces":3,"prom":120.0},{"id":"764009014412","code":"764009014412","n":"IMPERIAL LITRO 1LT","c":"Cervezas y preparados","pu":1179.94,"des":0.0,"imp":13.0,"lq":36,"ld":"2026-09-30","veces":3,"prom":32.0},{"id":"764009010117","code":"764009010117","n":"IMPERIAL VIDRIO 350ML","c":"Cervezas y preparados","pu":707.96,"des":0.0,"imp":13.0,"lq":240,"ld":"2026-09-30","veces":3,"prom":360.0},{"id":"764009040541","code":"764009040541","n":"PILSEN 6.0 LATA 350ML","c":"Cervezas y preparados","pu":700.58,"des":0.0,"imp":13.0,"lq":24,"ld":"2026-09-03","veces":1,"prom":24.0},{"id":"764009043931","code":"764009043931","n":"PILSEN 6.0 LITRO 1LT","c":"Cervezas y preparados","pu":1179.94,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-08-10","veces":1,"prom":12.0},{"id":"764009020314","code":"764009020314","n":"PILSEN LATA 350ML","c":"Cervezas y preparados","pu":700.58,"des":0.0,"imp":13.0,"lq":144,"ld":"2026-08-10","veces":1,"prom":144.0},{"id":"764009020918","code":"764009020918","n":"PILSEN LATA 473 ML","c":"Cervezas y preparados","pu":958.7,"des":0.0,"imp":13.0,"lq":24,"ld":"2026-09-03","veces":2,"prom":24.0},{"id":"764009027290","code":"764009027290","n":"PILSEN LATA 710ML","c":"Cervezas y preparados","pu":1179.94,"des":0.0,"imp":13.0,"lq":24,"ld":"2026-09-03","veces":2,"prom":24.0},{"id":"764009024411","code":"764009024411","n":"PILSEN LITRO 1LT","c":"Cervezas y preparados","pu":1179.94,"des":0.0,"imp":13.0,"lq":24,"ld":"2026-09-30","veces":3,"prom":28.0},{"id":"764009020116","code":"764009020116","n":"PILSEN VIDRIO 350 ML","c":"Cervezas y preparados","pu":707.96,"des":0.0,"imp":13.0,"lq":120,"ld":"2026-09-30","veces":3,"prom":120.0},{"id":"764009017505","code":"764009017505","n":"ROCK LIMON 350 ML LATA","c":"Cervezas y preparados","pu":737.17,"des":0.0,"imp":13.0,"lq":24,"ld":"2026-09-30","veces":2,"prom":24.0},{"id":"764009013071","code":"764009013071","n":"SILVER LATA 473ML","c":"Cervezas y preparados","pu":958.7,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-03","veces":1,"prom":12.0},{"id":"764009027306","code":"764009027306","n":"SILVER LATA 710ML","c":"Cervezas y preparados","pu":1179.94,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-08-10","veces":1,"prom":12.0},{"id":"764009015976","code":"764009015976","n":"SILVER LITRO 1LT","c":"Cervezas y preparados","pu":1179.94,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-08-10","veces":1,"prom":12.0},{"id":"764009004406","code":"764009004406","n":"SILVER VIDRIO 350ML","c":"Cervezas y preparados","pu":707.96,"des":0.0,"imp":13.0,"lq":120,"ld":"2026-08-10","veces":1,"prom":120.0},{"id":"764009020468","code":"764009020468","n":"SMIRNOFF GUARANA LATA 350ML","c":"Cervezas y preparados","pu":921.82,"des":0.0,"imp":13.0,"lq":48,"ld":"2026-09-30","veces":3,"prom":32.0},{"id":"764009002327","code":"764009002327","n":"SMIRNOFF NEGRA 350ML LATA","c":"Cervezas y preparados","pu":921.82,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-30","veces":3,"prom":12.0},{"id":"764009800312","code":"764009800312","n":"SMIRNOFF ROJA 350ML LATA","c":"Cervezas y preparados","pu":921.82,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-30","veces":1,"prom":12.0},{"id":"764009051868","code":"764009051868","n":"SMIRNOFF SMASH DURAZNO MANGO 350ML","c":"Cervezas y preparados","pu":995.58,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-08-10","veces":1,"prom":6.0},{"id":"764009013118","code":"764009013118","n":"SMIRNOFF VERDE 350ML LATA","c":"Cervezas y preparados","pu":921.82,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-30","veces":2,"prom":12.0},{"id":"8410337219082","code":"8410337219082","n":"ANIS DEL MONO 750ML","c":"Licores y vinos","pu":9775.0,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-08-19","veces":1,"prom":1.0},{"id":"7501008603024","code":"7501008603024","n":"BACARDI BLANCO LT","c":"Licores y vinos","pu":5857.92,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-09-03","veces":2,"prom":1.5},{"id":"5000196005921","code":"5000196005921","n":"BLACK & WHITE 1 LITRO","c":"Licores y vinos","pu":6402.05,"des":0.0,"imp":13.0,"lq":4,"ld":"2026-10-07","veces":3,"prom":4.3},{"id":"5000196007246","code":"5000196007246","n":"BUCHANANS PINEAPPLE 750ML","c":"Licores y vinos","pu":18484.03,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-09-30","veces":1,"prom":1.0},{"id":"087000002708","code":"087000002708","n":"CAPITAN MORGAN SPICED LITRO","c":"Licores y vinos","pu":8828.57,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-08-19","veces":1,"prom":1.0},{"id":"7441001176968","code":"7441001176968","n":"CENTENARIO RON 5 ANOS 1L","c":"Licores y vinos","pu":10486.02,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-10-07","veces":1,"prom":1.0},{"id":"7441001110962","code":"7441001110962","n":"CENTENARIO RON 7 ANOS 1L","c":"Licores y vinos","pu":12017.06,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-10-07","veces":1,"prom":1.0},{"id":"8410702033442","code":"8410702033442","n":"CONTENDA CABERNET SAUVIGNON 750 ML","c":"Licores y vinos","pu":2029.38,"des":0.0,"imp":13.0,"lq":2,"ld":"2026-09-16","veces":2,"prom":1.5},{"id":"8410702016025","code":"8410702016025","n":"CONTENDA MERLOT 700 ML","c":"Licores y vinos","pu":1944.83,"des":0.0,"imp":13.0,"lq":2,"ld":"2026-09-16","veces":2,"prom":1.5},{"id":"8410702039697","code":"8410702039697","n":"CONTENDA SAUVIGNON BLANC 750 ML","c":"Licores y vinos","pu":2160.92,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-09-10","veces":1,"prom":1.0},{"id":"762288000010","code":"762288000010","n":"FANAL CACIQUE GUARO 1L","c":"Licores y vinos","pu":4380.53,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-30","veces":4,"prom":8.2},{"id":"762288000027","code":"762288000027","n":"FANAL CACIQUE GUARO 365ML","c":"Licores y vinos","pu":1454.87,"des":5.0,"imp":13.0,"lq":24,"ld":"2026-09-03","veces":2,"prom":24.0},{"id":"762288000959","code":"762288000959","n":"FANAL CACIQUE LIGAO BAHIA SANDIA 1L","c":"Licores y vinos","pu":3383.57,"des":0.0,"imp":13.0,"lq":2,"ld":"2026-09-24","veces":3,"prom":1.7},{"id":"762288001017","code":"762288001017","n":"FANAL CACIQUE LIGAO PUERTO GUAYABA LT","c":"Licores y vinos","pu":3388.3,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-09-24","veces":1,"prom":1.0},{"id":"026964237689","code":"026964237689","n":"FLOR DE CAÑA 4 AÑOS LITRO","c":"Licores y vinos","pu":6349.25,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-08-19","veces":1,"prom":1.0},{"id":"026964257014","code":"026964257014","n":"FLOR DE CAÑA RON 7 ANOS 1L","c":"Licores y vinos","pu":9830.09,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-08-05","veces":1,"prom":1.0},{"id":"026964860184","code":"026964860184","n":"FLOR DE CAÑA RON ULTRA LITE 750 ML","c":"Licores y vinos","pu":5550.31,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-10-07","veces":1,"prom":1.0},{"id":"5010103800457","code":"5010103800457","n":"J Y B FLORIDA LITRO","c":"Licores y vinos","pu":8717.91,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-09-30","veces":1,"prom":1.0},{"id":"4067700031242","code":"4067700031242","n":"JAGERMEISTER 1L","c":"Licores y vinos","pu":10398.23,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-09-24","veces":2,"prom":2.5},{"id":"7441001135903","code":"7441001135903","n":"RON RICO ANEJO ORO 750ML","c":"Licores y vinos","pu":3707.21,"des":0.0,"imp":13.0,"lq":1,"ld":"2026-08-13","veces":1,"prom":1.0},{"id":"7804320568300","code":"7804320568300","n":"VINO CLOS BLANCO MERLOT 1 LT (VERDE)","c":"Licores y vinos","pu":1946.72,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-10-07","veces":3,"prom":7.3},{"id":"7804320559001","code":"7804320559001","n":"VINO FRONTERA CABERNET TINTO 750ML","c":"Licores y vinos","pu":3791.95,"des":0.0,"imp":13.0,"lq":2,"ld":"2026-08-13","veces":2,"prom":2.0},{"id":"7804320706009","code":"7804320706009","n":"VINO FRONTERA MERLOT BOTELLA","c":"Licores y vinos","pu":3791.95,"des":0.0,"imp":13.0,"lq":2,"ld":"2026-08-13","veces":1,"prom":2.0},{"id":"7804320556000","code":"7804320556000","n":"VINO FRONTERA SAUVIGNON BLANCO 750ML","c":"Licores y vinos","pu":4213.28,"des":0.0,"imp":13.0,"lq":3,"ld":"2026-09-16","veces":2,"prom":2.5},{"id":"4260592922074","code":"4260592922074","n":"FISHER DOUBLE CLICK (CORTO)","c":"Cigarros","pu":1000.0,"des":0.0,"imp":0.0,"lq":10,"ld":"2026-08-05","veces":1,"prom":10.0},{"id":"7441002811103","code":"7441002811103","n":"MARLBORO CRAFT BLUE","c":"Cigarros","pu":2300.0,"des":0.0,"imp":0.0,"lq":3,"ld":"2026-08-13","veces":1,"prom":3.0},{"id":"74411979","code":"74411979","n":"MARLBORO CRAFTED RED","c":"Cigarros","pu":2500.0,"des":0.0,"imp":0.0,"lq":10,"ld":"2026-08-13","veces":1,"prom":10.0},{"id":"7441002810458","code":"7441002810458","n":"MARLBORO FOREST FUSION","c":"Cigarros","pu":2500.0,"des":0.0,"imp":0.0,"lq":6,"ld":"2026-08-13","veces":1,"prom":6.0},{"id":"74410057","code":"74410057","n":"MARLBORO ROJO","c":"Cigarros","pu":2800.0,"des":0.0,"imp":0.0,"lq":10,"ld":"2026-10-07","veces":1,"prom":10.0},{"id":"7441002811004","code":"7441002811004","n":"MARLBORO SUMMER FUSION","c":"Cigarros","pu":2500.0,"des":0.0,"imp":0.0,"lq":3,"ld":"2026-08-13","veces":1,"prom":3.0},{"id":"7421000596318","code":"7421000596318","n":"PALL MALL CALIFORNIA DOBLE CLIC","c":"Cigarros","pu":2422.87,"des":0.0,"imp":0.0,"lq":4,"ld":"2026-10-07","veces":4,"prom":7.5},{"id":"74209002","code":"74209002","n":"PALL MALL IBIZA","c":"Cigarros","pu":2422.87,"des":0.0,"imp":0.0,"lq":5,"ld":"2026-10-07","veces":1,"prom":5.0},{"id":"74208975","code":"74208975","n":"PALL MALL TOKIO DOBLE CLICK","c":"Cigarros","pu":2422.87,"des":0.0,"imp":0.0,"lq":2,"ld":"2026-10-07","veces":3,"prom":9.0},{"id":"74208999","code":"74208999","n":"PALL MALL VEGAS","c":"Cigarros","pu":2422.87,"des":0.0,"imp":0.0,"lq":10,"ld":"2026-10-07","veces":4,"prom":12.5},{"id":"7441012306088","code":"7441012306088","n":"AGUA MONTANA 6 LT","c":"Bebidas","pu":1460.18,"des":0.0,"imp":13.0,"lq":10,"ld":"2026-09-10","veces":4,"prom":7.8},{"id":"32323","code":"32323","n":"AGUA MONTANA BIDON 18.9 LT","c":"Bebidas","pu":3097.35,"des":0.0,"imp":13.0,"lq":14,"ld":"2026-10-07","veces":9,"prom":12.8},{"id":"7441001628351","code":"7441001628351","n":"FRESCO LECHE FRESA 1L","c":"Bebidas","pu":811.49,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-10","veces":1,"prom":6.0},{"id":"7441001631542","code":"7441001631542","n":"FRESCO LECHE VAINILLA 1L","c":"Bebidas","pu":846.75,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-10","veces":1,"prom":6.0},{"id":"764009048059","code":"764009048059","n":"JET 1.5 LT","c":"Bebidas","pu":1216.81,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-30","veces":2,"prom":9.0},{"id":"764009020352","code":"764009020352","n":"JET 350 ML","c":"Bebidas","pu":405.6,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-30","veces":3,"prom":12.0},{"id":"764009004574","code":"764009004574","n":"JET 600 ML","c":"Bebidas","pu":626.84,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-30","veces":2,"prom":18.0},{"id":"088313004281","code":"088313004281","n":"KERNS JUGO DE TOMATE 1L","c":"Bebidas","pu":884.96,"des":0.0,"imp":13.0,"lq":3,"ld":"2026-09-03","veces":2,"prom":3.0},{"id":"088313009132","code":"088313009132","n":"KERNS JUGO DE TOMATE C/CHILE 154ML","c":"Bebidas","pu":442.48,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-24","veces":2,"prom":9.0},{"id":"088313009194","code":"088313009194","n":"KERNS JUGO DE TOMATE S/CHILE 154ML","c":"Bebidas","pu":442.48,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-24","veces":2,"prom":6.0},{"id":"764009040091","code":"764009040091","n":"KERNS TE BLANCO 3 LT","c":"Bebidas","pu":737.17,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-03","veces":1,"prom":12.0},{"id":"764009040107","code":"764009040107","n":"KERNS TE MELOCOTON 3L","c":"Bebidas","pu":737.17,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-03","veces":1,"prom":12.0},{"id":"7441009010158","code":"7441009010158","n":"PEPSI 2.5 LT","c":"Bebidas","pu":811.2,"des":0.0,"imp":13.0,"lq":18,"ld":"2026-09-30","veces":2,"prom":15.0},{"id":"764009048677","code":"764009048677","n":"TROPI FRUTAS 2.5 LT","c":"Bebidas","pu":1106.19,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-03","veces":1,"prom":6.0},{"id":"764009048684","code":"764009048684","n":"TROPI MANGO 2.5 LT","c":"Bebidas","pu":1106.19,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-03","veces":1,"prom":6.0},{"id":"764009048691","code":"764009048691","n":"TROPI MANZANA 2.5 LT","c":"Bebidas","pu":1106.19,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-03","veces":1,"prom":6.0},{"id":"00133","code":"00133","n":"GRANEL LECHE ENTERA 1 KG","c":"Lácteos y huevos","pu":4605.42,"des":0.0,"imp":1.0,"lq":3,"ld":"2026-10-07","veces":3,"prom":2.7},{"id":"00850","code":"00850","n":"GRANEL LECHE ENTERA 250 GR","c":"Lácteos y huevos","pu":1151.36,"des":0.0,"imp":1.0,"lq":10,"ld":"2026-10-07","veces":6,"prom":7.0},{"id":"00849","code":"00849","n":"GRANEL LECHE ENTERA 500 GR","c":"Lácteos y huevos","pu":2302.71,"des":0.0,"imp":1.0,"lq":6,"ld":"2026-10-07","veces":7,"prom":5.7},{"id":"1002369521126","code":"1002369521126","n":"HUEVO CEDRAL CARTON 15 UND","c":"Lácteos y huevos","pu":1386.14,"des":0.0,"imp":1.0,"lq":80,"ld":"2026-10-07","veces":9,"prom":77.8},{"id":"8445290709509","code":"8445290709509","n":"LECHE CONDENSADA LECHERA 100GR","c":"Lácteos y huevos","pu":478.31,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-10","veces":1,"prom":6.0},{"id":"7802950062809","code":"7802950062809","n":"LECHE CONDENSADA NESTLE 395G","c":"Lácteos y huevos","pu":1199.97,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-24","veces":3,"prom":6.0},{"id":"7506475107778","code":"7506475107778","n":"LECHE EVAPORADA IDEAL 360GR","c":"Lácteos y huevos","pu":884.96,"des":0.0,"imp":13.0,"lq":8,"ld":"2026-08-19","veces":1,"prom":8.0},{"id":"7441001601064","code":"7441001601064","n":"LECHE SEMIDES. 2% DOS PINOS 1L","c":"Lácteos y huevos","pu":1084.47,"des":0.0,"imp":1.0,"lq":24,"ld":"2026-09-24","veces":2,"prom":18.0},{"id":"751963110014","code":"751963110014","n":"NUMAR 1X4","c":"Lácteos y huevos","pu":1027.04,"des":0.0,"imp":1.0,"lq":8,"ld":"2026-10-07","veces":6,"prom":9.3},{"id":"751963110007","code":"751963110007","n":"NUMAR MARGARINA CLASICA UND 125G","c":"Lácteos y huevos","pu":257.6,"des":0.0,"imp":1.0,"lq":60,"ld":"2026-09-16","veces":1,"prom":60.0},{"id":"751963126008","code":"751963126008","n":"NUMAR MARGARINA CON AJO VASIJA 200GR","c":"Lácteos y huevos","pu":921.76,"des":0.0,"imp":1.0,"lq":3,"ld":"2026-09-10","veces":1,"prom":3.0},{"id":"751963120303","code":"751963120303","n":"NUMAR MARGARINA SUAVE VASIJA 250GR","c":"Lácteos y huevos","pu":738.08,"des":0.0,"imp":1.0,"lq":6,"ld":"2026-09-10","veces":1,"prom":6.0},{"id":"751963120006","code":"751963120006","n":"NUMAR MARGARINA SUAVE VASIJA 500G","c":"Lácteos y huevos","pu":1276.8,"des":0.0,"imp":1.0,"lq":3,"ld":"2026-09-10","veces":1,"prom":3.0},{"id":"751963120754","code":"751963120754","n":"NUMAR MARGARINA TASTE VASIJA 215GR","c":"Lácteos y huevos","pu":738.08,"des":0.0,"imp":1.0,"lq":2,"ld":"2026-09-24","veces":1,"prom":2.0},{"id":"041224860025","code":"041224860025","n":"ROLAND LECHE DE COCO 414ML","c":"Lácteos y huevos","pu":1495.92,"des":2.0,"imp":13.0,"lq":24,"ld":"2026-09-24","veces":3,"prom":24.0},{"id":"751963318007","code":"751963318007","n":"CLOVER ACEITE 17 LT","c":"Aceites y mantecas","pu":20391.8,"des":0.0,"imp":1.0,"lq":1,"ld":"2026-09-16","veces":2,"prom":1.0},{"id":"751963311619","code":"751963311619","n":"CLOVER ACEITE 3 LT","c":"Aceites y mantecas","pu":3999.52,"des":0.0,"imp":1.0,"lq":6,"ld":"2026-09-16","veces":3,"prom":3.7},{"id":"751963311268","code":"751963311268","n":"CLOVER ACEITE SOYA 900ML","c":"Aceites y mantecas","pu":1270.08,"des":0.0,"imp":1.0,"lq":12,"ld":"2026-08-05","veces":1,"prom":12.0},{"id":"751963210509","code":"751963210509","n":"CLOVER MANTECA 230G","c":"Aceites y mantecas","pu":301.28,"des":0.0,"imp":1.0,"lq":12,"ld":"2026-09-24","veces":4,"prom":12.0},{"id":"751963212107","code":"751963212107","n":"CLOVER MANTECA 460G","c":"Aceites y mantecas","pu":572.32,"des":0.0,"imp":1.0,"lq":12,"ld":"2026-10-07","veces":9,"prom":12.0},{"id":"751963323001","code":"751963323001","n":"CORONA ACEITE 900ML","c":"Aceites y mantecas","pu":1139.04,"des":2.0,"imp":1.0,"lq":20,"ld":"2026-09-24","veces":3,"prom":12.7},{"id":"751963231009","code":"751963231009","n":"CORONA MANTECA 460G","c":"Aceites y mantecas","pu":572.32,"des":0.0,"imp":1.0,"lq":6,"ld":"2026-09-24","veces":2,"prom":6.0},{"id":"751963330306","code":"751963330306","n":"DOROFRIT ACEITE 17L","c":"Aceites y mantecas","pu":19896.0,"des":0.0,"imp":1.0,"lq":2,"ld":"2026-09-16","veces":1,"prom":2.0},{"id":"7441080900911","code":"7441080900911","n":"EN SU PUNTO ACEITE 1.5 L","c":"Aceites y mantecas","pu":1859.84,"des":5.0,"imp":1.0,"lq":12,"ld":"2026-08-05","veces":1,"prom":12.0},{"id":"7441080900041","code":"7441080900041","n":"EN SU PUNTO ACEITE 3L","c":"Aceites y mantecas","pu":3601.96,"des":5.0,"imp":1.0,"lq":12,"ld":"2026-10-07","veces":4,"prom":9.0},{"id":"7441080900799","code":"7441080900799","n":"EN SU PUNTO ACEITE 450ML","c":"Aceites y mantecas","pu":643.23,"des":5.0,"imp":1.0,"lq":24,"ld":"2026-10-07","veces":2,"prom":24.0},{"id":"7441080901147","code":"7441080901147","n":"EN SU PUNTO ACEITE 5 LT","c":"Aceites y mantecas","pu":6082.34,"des":5.0,"imp":1.0,"lq":4,"ld":"2026-08-19","veces":2,"prom":4.0},{"id":"7441080901703","code":"7441080901703","n":"EN SU PUNTO ACEITE 900 ML","c":"Aceites y mantecas","pu":1158.6,"des":5.0,"imp":1.0,"lq":24,"ld":"2026-10-07","veces":7,"prom":17.1},{"id":"7441006818290","code":"7441006818290","n":"CAFE 1820 125G","c":"Granos, azúcar y sal","pu":1258.88,"des":0.0,"imp":1.0,"lq":24,"ld":"2026-10-07","veces":3,"prom":24.0},{"id":"7441006818283","code":"7441006818283","n":"CAFE 1820 500G","c":"Granos, azúcar y sal","pu":4379.2,"des":0.0,"imp":1.0,"lq":6,"ld":"2026-10-07","veces":4,"prom":7.0},{"id":"7441006838069","code":"7441006838069","n":"CAFE 1820 750 G","c":"Granos, azúcar y sal","pu":6339.2,"des":0.0,"imp":1.0,"lq":4,"ld":"2026-08-19","veces":2,"prom":4.5},{"id":"8445291632448","code":"8445291632448","n":"CAFE PRESTO SOBRES 34G 20 UND CJ","c":"Granos, azúcar y sal","pu":1788.52,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-16","veces":4,"prom":4.5},{"id":"7441042699631","code":"7441042699631","n":"DOÑA MARIA AZUCAR 1KG","c":"Granos, azúcar y sal","pu":758.24,"des":2.0,"imp":1.0,"lq":30,"ld":"2026-08-13","veces":1,"prom":30.0},{"id":"7441042699624","code":"7441042699624","n":"DOÑA MARIA AZUCAR 2KG","c":"Granos, azúcar y sal","pu":1494.08,"des":2.0,"imp":1.0,"lq":12,"ld":"2026-08-13","veces":1,"prom":12.0},{"id":"088313005394","code":"088313005394","n":"DUCAL FRIJOL ROJO ENTEROS OLLA 1.82 KG (4LB)","c":"Granos, azúcar y sal","pu":1511.5,"des":0.0,"imp":13.0,"lq":2,"ld":"2026-09-24","veces":1,"prom":2.0},{"id":"00276","code":"00276","n":"GRANEL FRIJOL ROJO KG","c":"Granos, azúcar y sal","pu":1113.86,"des":0.0,"imp":1.0,"lq":8,"ld":"2026-10-07","veces":4,"prom":11.8},{"id":"4001048","code":"4001048","n":"GRANEL SAL KG","c":"Granos, azúcar y sal","pu":287.13,"des":0.0,"imp":1.0,"lq":12,"ld":"2026-09-03","veces":2,"prom":18.5},{"id":"7441003600102","code":"7441003600102","n":"SAL SOL CON FLUOR 500GR","c":"Granos, azúcar y sal","pu":549.53,"des":0.0,"imp":1.0,"lq":25,"ld":"2026-09-16","veces":2,"prom":25.0},{"id":"7441003600300","code":"7441003600300","n":"SAL SOLAR 500G","c":"Granos, azúcar y sal","pu":313.12,"des":0.0,"imp":1.0,"lq":25,"ld":"2026-09-03","veces":1,"prom":25.0},{"id":"7441042600002","code":"7441042600002","n":"ZUKRA AZUCAR CRUDA 2K","c":"Granos, azúcar y sal","pu":1758.35,"des":0.0,"imp":13.0,"lq":3,"ld":"2026-09-10","veces":2,"prom":3.5},{"id":"089674070113","code":"089674070113","n":"CHILE MALHER MITADES 156 G","c":"Sopas, consomés y condimentos","pu":591.21,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-03","veces":1,"prom":6.0},{"id":"089674070359","code":"089674070359","n":"CHILE MALHER RODAJAS 156 G","c":"Sopas, consomés y condimentos","pu":591.03,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-03","veces":1,"prom":6.0},{"id":"756958010959","code":"756958010959","n":"EMPANIZADOR PATITOS PESCADO 100G","c":"Sopas, consomés y condimentos","pu":477.43,"des":0.0,"imp":13.0,"lq":8,"ld":"2026-10-07","veces":2,"prom":7.0},{"id":"7441041002845","code":"7441041002845","n":"JALEA UJARRAS GUAYABA PQ 225G","c":"Sopas, consomés y condimentos","pu":601.45,"des":0.0,"imp":1.0,"lq":6,"ld":"2026-09-10","veces":1,"prom":6.0},{"id":"7502231541114","code":"7502231541114","n":"LEVADURA SECA FLEICHMAN 125G","c":"Sopas, consomés y condimentos","pu":591.36,"des":0.0,"imp":1.0,"lq":6,"ld":"2026-08-19","veces":1,"prom":6.0},{"id":"7502231540650","code":"7502231540650","n":"LEVADURA SECA MASA DULCE FLEICH. 500G","c":"Sopas, consomés y condimentos","pu":2094.4,"des":0.0,"imp":1.0,"lq":2,"ld":"2026-09-16","veces":1,"prom":2.0},{"id":"7613032343231","code":"7613032343231","n":"MAGGI CONSOME CAMARON 10GR","c":"Sopas, consomés y condimentos","pu":87.37,"des":0.0,"imp":13.0,"lq":72,"ld":"2026-10-07","veces":5,"prom":67.2},{"id":"7613032343019","code":"7613032343019","n":"MAGGI CONSOME COSTILLA 10 GR","c":"Sopas, consomés y condimentos","pu":87.4,"des":0.0,"imp":13.0,"lq":72,"ld":"2026-10-07","veces":2,"prom":66.0},{"id":"7613032343194","code":"7613032343194","n":"MAGGI CONSOME MI SAZON 10GR","c":"Sopas, consomés y condimentos","pu":87.37,"des":0.0,"imp":13.0,"lq":96,"ld":"2026-10-07","veces":6,"prom":100.0},{"id":"088169407625","code":"088169407625","n":"MAGGI CONSOME POLLO 10GR","c":"Sopas, consomés y condimentos","pu":73.45,"des":0.0,"imp":13.0,"lq":280,"ld":"2026-10-07","veces":5,"prom":156.8},{"id":"7613032774134","code":"7613032774134","n":"MAGGI CONSOME POLLO 225G","c":"Sopas, consomés y condimentos","pu":1859.31,"des":0.0,"imp":13.0,"lq":4,"ld":"2026-09-24","veces":3,"prom":3.7},{"id":"7613032343101","code":"7613032343101","n":"MAGGI CONSOME RES 10 GR","c":"Sopas, consomés y condimentos","pu":87.37,"des":0.0,"imp":13.0,"lq":72,"ld":"2026-09-16","veces":2,"prom":60.0},{"id":"7613032332488","code":"7613032332488","n":"MAGGI CONSOME SABOR Y COLOR 10GR","c":"Sopas, consomés y condimentos","pu":87.37,"des":0.0,"imp":13.0,"lq":72,"ld":"2026-10-07","veces":5,"prom":86.4},{"id":"088169007511","code":"088169007511","n":"MAGGI SOPA COSTILLA 58GR","c":"Sopas, consomés y condimentos","pu":410.9,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-24","veces":1,"prom":6.0},{"id":"7613032739690","code":"7613032739690","n":"MAGGI SOPA OLLA DE CARNE 40GR","c":"Sopas, consomés y condimentos","pu":410.9,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-24","veces":2,"prom":9.0},{"id":"7613035371354","code":"7613035371354","n":"MAGGI SOPA POLLO CON FIDEOS 28.5G (PEQUEÑA)","c":"Sopas, consomés y condimentos","pu":205.82,"des":0.0,"imp":13.0,"lq":24,"ld":"2026-09-16","veces":1,"prom":24.0},{"id":"7613035396203","code":"7613035396203","n":"MAGGI SOPA POLLO CON FIDEOS 57GR","c":"Sopas, consomés y condimentos","pu":381.97,"des":0.0,"imp":13.0,"lq":24,"ld":"2026-09-16","veces":5,"prom":24.0},{"id":"088169428903","code":"088169428903","n":"MAGGI SOPA RES FIDEOS 60GR","c":"Sopas, consomés y condimentos","pu":410.79,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-24","veces":1,"prom":12.0},{"id":"041789001987","code":"041789001987","n":"MARUCHAN CAMARON C/CHILE 64GR","c":"Sopas, consomés y condimentos","pu":510.6,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-16","veces":1,"prom":12.0},{"id":"041789001925","code":"041789001925","n":"MARUCHAN CARNE RES 64GR","c":"Sopas, consomés y condimentos","pu":510.6,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-10-07","veces":2,"prom":12.0},{"id":"041789001918","code":"041789001918","n":"MARUCHAN POLLO 64GR","c":"Sopas, consomés y condimentos","pu":510.6,"des":0.0,"imp":13.0,"lq":24,"ld":"2026-10-07","veces":8,"prom":18.0},{"id":"041789001840","code":"041789001840","n":"MARUCHAN POLLO C/CHILE 64GR","c":"Sopas, consomés y condimentos","pu":510.6,"des":0.0,"imp":13.0,"lq":24,"ld":"2026-10-07","veces":5,"prom":16.8},{"id":"041789002984","code":"041789002984","n":"MARUCHAN POLLO PICANTE RAMEN","c":"Sopas, consomés y condimentos","pu":343.85,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-24","veces":2,"prom":6.0},{"id":"041789001833","code":"041789001833","n":"MARUCHAN QUESO 64 GR","c":"Sopas, consomés y condimentos","pu":510.6,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-10-07","veces":2,"prom":12.0},{"id":"041789002977","code":"041789002977","n":"MARUCHAN RAMEN CAMARON 85G","c":"Sopas, consomés y condimentos","pu":343.85,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-03","veces":1,"prom":6.0},{"id":"041789002991","code":"041789002991","n":"MARUCHAN RAMEN POLLO PICANTE","c":"Sopas, consomés y condimentos","pu":343.85,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-10-07","veces":3,"prom":6.0},{"id":"041789002922","code":"041789002922","n":"MARUCHAN RAMEN RES 85G","c":"Sopas, consomés y condimentos","pu":343.85,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-10-07","veces":2,"prom":6.0},{"id":"041789002915","code":"041789002915","n":"MARUCHAN RAMEN SOPA POLLO 85G","c":"Sopas, consomés y condimentos","pu":343.85,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-10-07","veces":4,"prom":6.0},{"id":"756958000356","code":"756958000356","n":"PATITOS ACHIOTE 210GR","c":"Sopas, consomés y condimentos","pu":1269.79,"des":0.0,"imp":1.0,"lq":4,"ld":"2026-09-24","veces":2,"prom":3.5},{"id":"7569580003915","code":"7569580003915","n":"PATITOS ACHIOTE 450G","c":"Sopas, consomés y condimentos","pu":2530.0,"des":0.0,"imp":1.0,"lq":3,"ld":"2026-09-03","veces":1,"prom":3.0},{"id":"756958000554","code":"756958000554","n":"PATITOS ACHIOTE 850G","c":"Sopas, consomés y condimentos","pu":4424.0,"des":0.0,"imp":1.0,"lq":3,"ld":"2026-09-10","veces":3,"prom":2.7},{"id":"7441002652485","code":"7441002652485","n":"ATUN TROCITOS AHUMADO 105G SPLASH","c":"Pastas y enlatados","pu":660.84,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-10","veces":1,"prom":6.0},{"id":"7441002644848","code":"7441002644848","n":"AURORA ATUN TROCITOS 140GR 2PACK","c":"Pastas y enlatados","pu":785.54,"des":0.0,"imp":1.0,"lq":6,"ld":"2026-09-24","veces":2,"prom":15.0},{"id":"731701001460","code":"731701001460","n":"PASTA PLUMAS","c":"Pastas y enlatados","pu":672.72,"des":0.0,"imp":1.0,"lq":4,"ld":"2026-08-05","veces":1,"prom":4.0},{"id":"731701017225","code":"731701017225","n":"ROMA CABELLO 300 GR","c":"Pastas y enlatados","pu":1118.7,"des":0.0,"imp":1.0,"lq":3,"ld":"2026-08-05","veces":1,"prom":3.0},{"id":"731701001293","code":"731701001293","n":"ROMA CANELONES 250GR","c":"Pastas y enlatados","pu":835.28,"des":0.0,"imp":1.0,"lq":3,"ld":"2026-08-05","veces":1,"prom":3.0},{"id":"731701001279","code":"731701001279","n":"ROMA CARACOLITOS 250GR","c":"Pastas y enlatados","pu":588.74,"des":0.0,"imp":1.0,"lq":4,"ld":"2026-08-05","veces":1,"prom":4.0},{"id":"731701013791","code":"731701013791","n":"ROMA SPAGHETTI 3PACK N3 250G","c":"Pastas y enlatados","pu":1459.99,"des":0.0,"imp":1.0,"lq":15,"ld":"2026-08-05","veces":1,"prom":15.0},{"id":"731701017232","code":"731701017232","n":"ROMA TALLARIN 300GR","c":"Pastas y enlatados","pu":1118.7,"des":0.0,"imp":1.0,"lq":6,"ld":"2026-08-05","veces":1,"prom":6.0},{"id":"731701001408","code":"731701001408","n":"ROMA TORNILLO 250G","c":"Pastas y enlatados","pu":672.72,"des":0.0,"imp":1.0,"lq":4,"ld":"2026-08-05","veces":1,"prom":4.0},{"id":"7441002645142","code":"7441002645142","n":"SPLASH ATUN TROCITOS AZUL 140G 3PACK","c":"Pastas y enlatados","pu":1843.78,"des":0.0,"imp":1.0,"lq":6,"ld":"2026-09-10","veces":1,"prom":6.0},{"id":"7441002652492","code":"7441002652492","n":"SPLASH TROCITOS JALAPEÑO 105GR","c":"Pastas y enlatados","pu":660.84,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-10","veces":1,"prom":6.0},{"id":"7441011097161","code":"7441011097161","n":"MORTADELA POLLO KIMBY 1KG","c":"Carnes y embutidos","pu":990.1,"des":0.0,"imp":1.0,"lq":10,"ld":"2026-09-24","veces":1,"prom":10.0},{"id":"00134","code":"00134","n":"POLLO MUSLO NACIONAL KG","c":"Carnes y embutidos","pu":1287.13,"des":0.0,"imp":1.0,"lq":25,"ld":"2026-09-24","veces":1,"prom":25.0},{"id":"086581010980","code":"086581010980","n":"GTA CHIKY CHOCOLATE TUBO","c":"Galletas y snacks","pu":442.48,"des":0.0,"imp":13.0,"lq":12,"ld":"2026-09-03","veces":1,"prom":12.0},{"id":"086581007324","code":"086581007324","n":"GTA MANTEQUILLA TUBO 171G","c":"Galletas y snacks","pu":495.05,"des":0.0,"imp":1.0,"lq":12,"ld":"2026-09-24","veces":2,"prom":12.0},{"id":"9849169178","code":"9849169178","n":"BOLSA EMPAQUE MANIGUETA KG","c":"Otros","pu":1534.65,"des":0.0,"imp":1.0,"lq":2,"ld":"2026-09-24","veces":1,"prom":2.0},{"id":"222","code":"222","n":"BOLSA EMPAQUE TRANSP. KG","c":"Otros","pu":2123.89,"des":0.0,"imp":13.0,"lq":2,"ld":"2026-09-10","veces":1,"prom":2.0},{"id":"7443011979942","code":"7443011979942","n":"CARBON OSKAR 2 KG","c":"Otros","pu":940.19,"des":0.0,"imp":13.0,"lq":6,"ld":"2026-09-24","veces":1,"prom":6.0}];
+const CATS = [...new Set(BASE.map(i => i.c))];
+const K = { order: "pedido-daring-v1", extra: "daring-extra-v1", pics: "daring-pics", img: "daring-img-v1" };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const fmt = n => "₡" + Number(n || 0).toLocaleString("es-CR", {minimumFractionDigits: 0, maximumFractionDigits: 0});
+const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch (e) { return d; } };
+const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const fdate = iso => { if (!iso) return ""; const [y,m,d] = iso.split("-"); return d + "/" + ["","ene","feb","mar","abr","may","jun","jul","ago","sept","oct","nov","dic"][+m]; };
+
+let order = load(K.order, {});
+let extraLocal = load(K.extra, []);
+let extraRepo = [];
+let imgCache = load(K.img, {});
+let showPics = load(K.pics, true);
+let cat = "Todas", q = "", only = false;
+let ITEMS = [], byId = {};
+
+function rebuild() {
+  const seen = new Set(BASE.map(i => i.id));
+  const extras = [...extraRepo, ...extraLocal].filter(e => !seen.has(e.id) && seen.add(e.id))
+    .map(e => ({...e, extra: true, own: extraLocal.some(x => x.id === e.id)}));
+  ITEMS = [...BASE, ...extras];
+  byId = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+}
+function allCats() { return [...new Set([...CATS, ...ITEMS.map(i => i.c)])]; }
+function chips() {
+  $("#chips").innerHTML = ["Todas", ...allCats()].map(c => `<button class="chip" aria-pressed="${c===cat}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+}
+function matches(i) {
+  if (cat !== "Todas" && i.c !== cat) return false;
+  if (only && !(order[i.id] > 0)) return false;
+  if (q) { const h = norm(i.n + " " + (i.code || "") + " " + i.c); return norm(q).split(/\s+/).every(t => h.includes(t)); }
+  return true;
+}
+function rowHTML(i) {
+  const n = order[i.id] || 0;
+  const hist = i.extra ? `<span class="tag">Agregado</span>` :
+    `Últ.: <b>${i.lq}</b> el ${fdate(i.ld)} · ${i.veces} ${i.veces>1?"facturas":"factura"}`;
+  const price = i.pu ? `${fmt(i.pu)}${i.imp ? ` <small>+IVA ${i.imp}%</small>` : ""}${i.des ? ` <small>−${i.des}%</small>` : ""}` : "";
+  return `<div class="row${n>0?" on":""}" data-id="${esc(i.id)}">
+    ${showPics ? `<button class="th" data-zoom="${esc(i.id)}" aria-label="Ver foto">${imgCache[i.code] ? `<img src="${esc(imgCache[i.code])}" alt="">` : ""}</button>` : ""}
+    <div class="info"><div class="name">${esc(i.n)}</div>
+      <div class="sub"><span class="code">${esc(i.code || "sin código")}</span><span>${hist}</span></div></div>
+    <div class="price">${price}</div>
+    <div class="step"><button data-d="-1" aria-label="Menos" ${n>0?"":"disabled"}>−</button><input id="q-${esc(i.id)}" inputmode="numeric" value="${n||""}" placeholder="0" aria-label="Cantidad de ${esc(i.n)}"><button data-d="1" aria-label="Más">+</button></div>
+  </div>`;
+}
+function render() {
+  const vis = ITEMS.filter(matches);
+  const groups = [];
+  vis.forEach(i => { let g = groups.find(g => g.c === i.c); if (!g) groups.push(g = {c: i.c, list: []}); g.list.push(i); });
+  $("#list").innerHTML = groups.length ? groups.map(G => `<section class="sec"><h2>${esc(G.c)} <small>${G.list.length}</small></h2>
+    <div class="rows">${G.list.map(rowHTML).join("")}</div></section>`).join("")
+    : `<div class="empty">${only ? "Todavía no has agregado productos al pedido." : "No hay productos que coincidan. Puedes agregarlo con “+ Agregar producto”."}</div>`;
+  $("#count").textContent = vis.length + " de " + ITEMS.length + " productos";
+  totals(); observePics();
+}
+function lines() { return ITEMS.filter(i => order[i.id] > 0).map(i => ({...i, q: order[i.id]})); }
+const sub = l => (l.pu || 0) * (1 - (l.des || 0) / 100) * l.q;
+function totals() {
+  const L = lines(), t = L.reduce((s,l) => s + sub(l), 0), u = L.reduce((s,l) => s + l.q, 0);
+  $("#bTotal").textContent = fmt(t);
+  $("#bInfo").textContent = L.length ? `${L.length} producto${L.length>1?"s":""} · ${u} unidades · aprox. sin IVA` : "Nada seleccionado aún";
+  $("#open").disabled = !L.length;
+  $("#oTotal").textContent = fmt(t);
+  $("#oInfo").textContent = `${L.length} productos · aprox. sin IVA`;
+}
+function setQty(id, n, re = true) {
+  n = Math.max(0, Math.min(99999, parseInt(n) || 0));
+  if (n > 0) order[id] = n; else delete order[id];
+  store(K.order, order);
+  if (re) document.querySelectorAll(`.row[data-id="${CSS.escape(id)}"]`).forEach(el => { el.outerHTML = rowHTML(byId[id]); });
+  totals(); if (re) observePics();
+}
+
+/* Photos from Open Food Facts by barcode, loaded only when the row is visible */
+const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { io.unobserve(e.target); fetchPic(e.target.closest(".row").dataset.id); } }), {rootMargin: "200px"}) : null;
+const asked = new Set();
+function observePics() {
+  if (!showPics || !io) return;
+  document.querySelectorAll(".row .th:empty").forEach(t => { const i = byId[t.closest(".row").dataset.id]; if (i && /^\d{8,14}$/.test(i.code || "") && !(i.code in imgCache)) io.observe(t); });
+}
+async function fetchPic(id) {
+  const i = byId[id]; if (!i || asked.has(i.code)) return; asked.add(i.code);
+  try {
+    const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${i.code}.json?fields=image_front_small_url,image_small_url`);
+    const j = r.ok ? await r.json() : {};
+    const u = j.product && (j.product.image_front_small_url || j.product.image_small_url) || "";
+    imgCache[i.code] = u; store(K.img, imgCache);
+    if (u) document.querySelectorAll(`.row[data-id="${CSS.escape(id)}"] .th`).forEach(t => t.innerHTML = `<img src="${esc(u)}" alt="">`);
+  } catch (e) { /* sin internet: se reintenta la próxima vez */ asked.delete(i.code); }
+}
+
+/* Events */
+$("#chips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; chips(); render(); window.scrollTo({top: 0}); });
+$("#q").addEventListener("input", e => { q = e.target.value.trim(); render(); });
+$("#only").addEventListener("change", e => { only = e.target.checked; render(); });
+$("#pics").checked = showPics;
+$("#pics").addEventListener("change", e => { showPics = e.target.checked; store(K.pics, showPics); render(); });
+$("#list").addEventListener("click", e => {
+  const z = e.target.closest("[data-zoom]");
+  if (z) { const i = byId[z.dataset.zoom]; const u = imgCache[i.code]; if (u) { $("#lbImg").src = u.replace(".200.", ".400.").replace(".100.", ".400."); $("#lb").hidden = false; } return; }
+  const b = e.target.closest(".step button"); if (!b) return;
+  const id = b.closest(".row").dataset.id; setQty(id, (order[id] || 0) + Number(b.dataset.d));
+  document.querySelector(`.row[data-id="${CSS.escape(id)}"] button[data-d="${b.dataset.d}"]`)?.focus();
+});
+$("#list").addEventListener("change", e => { if (e.target.id.startsWith("q-")) setQty(e.target.id.slice(2), e.target.value); });
+$("#list").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id.startsWith("q-")) e.target.blur(); });
+$("#lb").addEventListener("click", () => $("#lb").hidden = true);
+$("#fill").addEventListener("click", () => {
+  const last = BASE.reduce((m, i) => i.ld > m ? i.ld : m, "");
+  BASE.filter(i => i.ld === last).forEach(i => { order[i.id] = Math.round(i.lq); });
+  store(K.order, order); render();
+  $("#fill").textContent = "Listo: cargado el pedido del " + fdate(last);
+  setTimeout(() => $("#fill").textContent = "Llenar con el último pedido", 2500);
+});
+
+/* Order drawer */
+function drawOrder() {
+  const L = lines();
+  $("#olist").innerHTML = L.length ? L.map(l => `<div class="oi" data-id="${esc(l.id)}">
+    <div><div class="name">${esc(l.n)}</div><div class="sub"><span class="code">${esc(l.code || "sin código")}</span><span>${l.pu ? fmt(l.pu) + " c/u" : "sin precio"}</span></div></div>
+    <div class="step"><button data-d="-1" aria-label="Menos">−</button><input id="o-${esc(l.id)}" inputmode="numeric" value="${l.q}" aria-label="Cantidad"><button data-d="1" aria-label="Más">+</button></div>
+    <div class="price">${l.pu ? fmt(sub(l)) : "—"}</div></div>`).join("") : `<div class="empty">El pedido está vacío.</div>`;
+  ["#xlsx","#pdf","#copy"].forEach(s => $(s).disabled = !L.length);
+}
+function openOrder(){ drawOrder(); $("#msg").textContent = ""; $("#fallback").hidden = true; resetClear(); $("#ov").hidden = false; $("#close").focus(); }
+function closeAll(){ $("#ov").hidden = true; $("#addOv").hidden = true; render(); }
+$("#open").onclick = openOrder;
+$("#close").onclick = closeAll;
+$("#ov").addEventListener("click", e => { if (e.target.id === "ov") closeAll(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#lb").hidden) $("#lb").hidden = true; else closeAll(); } });
+$("#olist").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; const id = b.closest(".oi").dataset.id; setQty(id, (order[id]||0) + Number(b.dataset.d), false); drawOrder(); resetClear(); });
+$("#olist").addEventListener("change", e => { if (e.target.id.startsWith("o-")) { setQty(e.target.id.slice(2), e.target.value, false); drawOrder(); resetClear(); } });
+
+const today = () => new Date().toLocaleDateString("es-CR", {day:"2-digit", month:"2-digit", year:"numeric"});
+const stamp = () => { const d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+function offer(filename, data) {
+  try { const blob = data instanceof Blob ? data : new Blob([data]); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); return true;
+  } catch (e) { return false; }
+}
+$("#xlsx").onclick = () => {
+  const L = lines(); const rows = [["Pedido Daring · " + today()], [], ["Código","Producto","Cantidad","Precio unit. (últ. factura, sin IVA)","% desc.","Subtotal aprox."]];
+  L.forEach((l, k) => { const r = k + 4; rows.push([l.code || "", l.n, l.q, l.pu || null, l.des || 0, l.pu ? {f:`C${r}*D${r}*(1-E${r}/100)`, v: sub(l)} : null]); });
+  const last = L.length + 3;
+  rows.push([], ["", "Total", {f:`SUM(C4:C${last})`, v:L.reduce((s,l)=>s+l.q,0)}, "", "", {f:`SUM(F4:F${last})`, v:L.reduce((s,l)=>s+sub(l),0)}]);
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"] = [{wch:16},{wch:46},{wch:10},{wch:18},{wch:8},{wch:16}];
+  for (let r = 4; r <= last + 2; r++) ["D","F"].forEach(c => { if (ws[c+r]) ws[c+r].z = '"₡"#,##0.00'; });
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Pedido");
+  $("#msg").textContent = offer("Pedido Daring " + stamp() + ".xlsx", new Blob([XLSX.write(wb, {bookType:"xlsx", type:"array"})])) ? "Excel descargado." : "No se pudo descargar.";
+};
+$("#pdf").onclick = () => {
+  const L = lines(); const { jsPDF } = window.jspdf; const doc = new jsPDF({unit:"pt", format:"letter"});
+  const c = n => "C " + Math.round(n).toLocaleString("en-US");
+  doc.setFont("helvetica","bold"); doc.setFontSize(16); doc.text("Pedido - Inversiones Daring del Cedral", 40, 50);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.text("Fecha: " + today() + "   ·   Cliente: Super Ever", 40, 68);
+  doc.autoTable({ startY: 84, head: [["Código","Producto","Cant.","Precio ref.","Subtotal"]],
+    body: L.map(l => [l.code || "", l.n, l.q, l.pu ? c(l.pu) : "", l.pu ? c(sub(l)) : ""]),
+    foot: [["","Total", L.reduce((s,l)=>s+l.q,0), "", c(L.reduce((s,l)=>s+sub(l),0))]],
+    styles:{fontSize:9, cellPadding:4}, headStyles:{fillColor:[15,110,110]}, footStyles:{fillColor:[230,242,242], textColor:20, fontStyle:"bold"},
+    columnStyles:{0:{cellWidth:86},2:{halign:"right",cellWidth:40},3:{halign:"right",cellWidth:66},4:{halign:"right",cellWidth:70}} });
+  $("#msg").textContent = offer("Pedido Daring " + stamp() + ".pdf", doc.output("blob")) ? "PDF descargado." : "No se pudo descargar.";
+};
+$("#copy").onclick = () => {
+  const L = lines();
+  const t = "*Pedido Super Ever* · " + today() + "\n\n" + L.map(l => `• ${l.q} × ${l.n}${l.code ? " (" + l.code + ")" : ""}`).join("\n") + `\n\nTotal: ${L.reduce((s,l)=>s+l.q,0)} unidades`;
+  const fb = () => { const ta = $("#fallback"); ta.value = t; ta.hidden = false; ta.focus(); ta.select(); $("#msg").textContent = "Selecciona y copia el texto de abajo."; };
+  try { navigator.clipboard.writeText(t).then(() => $("#msg").textContent = "Copiado. Pégalo en WhatsApp.", fb); } catch (e) { fb(); }
+};
+function resetClear(){ $("#clearBox").innerHTML = `<button class="btn ghost" id="clear">Vaciar pedido</button>`; $("#clear").onclick = askClear; $("#clear").disabled = !lines().length; }
+function askClear(){ $("#clearBox").innerHTML = `<span>¿Borrar todo el pedido?</span><button class="btn" id="yes">Sí, vaciar</button><button class="btn ghost" id="no">Cancelar</button>`;
+  $("#yes").onclick = () => { order = {}; store(K.order, order); drawOrder(); totals(); resetClear(); $("#msg").textContent = "Pedido vaciado."; };
+  $("#no").onclick = resetClear; }
+
+/* Manual products */
+function drawExtra() {
+  $("#fCat").innerHTML = allCats().map(c => `<option${c==="Otros"?" selected":""}>${esc(c)}</option>`).join("");
+  const own = extraLocal, repo = extraRepo.filter(r => !own.some(o => o.id === r.id));
+  $("#extraList").innerHTML = (own.length || repo.length) ? [
+    ...own.map(e => `<div class="ex"><div><b>${esc(e.n)}</b><br><small>${esc(e.code || "sin código")} · ${esc(e.c)}${e.pu ? " · " + fmt(e.pu) : ""}</small></div><button type="button" class="btn ghost sm" data-del="${esc(e.id)}">Quitar</button></div>`),
+    ...repo.map(e => `<div class="ex"><div><b>${esc(e.n)}</b><br><small>${esc(e.code || "sin código")} · ${esc(e.c)} · desde extra.json</small></div></div>`)
+  ].join("") : `<p class="hint">Todavía no has agregado productos.</p>`;
+}
+$("#addOpen").onclick = () => { drawExtra(); $("#addMsg").textContent = ""; $("#addOv").hidden = false; $("#fName").focus(); };
+$("#addClose").onclick = closeAll;
+$("#addOv").addEventListener("click", e => { if (e.target.id === "addOv") closeAll(); });
+$("#addForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const n = $("#fName").value.trim().toUpperCase(); if (!n) return;
+  const code = $("#fCode").value.trim();
+  const id = "x-" + (code || norm(n).replace(/[^a-z0-9]+/g, "-"));
+  if (byId[id] || (code && BASE.some(b => b.code === code))) { $("#addMsg").textContent = "Ese producto ya está en la lista."; return; }
+  const pu = parseFloat($("#fPrice").value.replace(/\s/g, "").replace(",", ".")) || 0;
+  extraLocal.push({id, code, n, c: $("#fCat").value, pu, imp: 0, des: 0});
+  store(K.extra, extraLocal); rebuild(); chips(); drawExtra();
+  $("#addForm").reset(); $("#addMsg").textContent = "Guardado: " + n;
+});
+$("#extraList").addEventListener("click", e => {
+  const b = e.target.closest("[data-del]"); if (!b) return;
+  extraLocal = extraLocal.filter(x => x.id !== b.dataset.del); delete order[b.dataset.del];
+  store(K.extra, extraLocal); store(K.order, order); rebuild(); chips(); drawExtra();
+});
+$("#expExtra").onclick = () => {
+  const all = [...extraRepo.filter(r => !extraLocal.some(o => o.id === r.id)), ...extraLocal];
+  $("#addMsg").textContent = offer("extra.json", JSON.stringify(all, null, 2)) ? "Descargado extra.json (" + all.length + " productos)." : "No se pudo descargar.";
+};
+$("#impExtra").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const arr = JSON.parse(await f.text()); if (!Array.isArray(arr)) throw 0;
+    arr.forEach(x => { if (x && x.id && x.n && !extraLocal.some(o => o.id === x.id)) extraLocal.push({id: x.id, code: x.code || "", n: x.n, c: x.c || "Otros", pu: +x.pu || 0, imp: +x.imp || 0, des: +x.des || 0}); });
+    store(K.extra, extraLocal); rebuild(); chips(); drawExtra(); $("#addMsg").textContent = "Productos cargados.";
+  } catch (err) { $("#addMsg").textContent = "Ese archivo no es un extra.json válido."; }
+  e.target.value = "";
+});
+
+rebuild(); chips(); render();
+fetch("extra.json", {cache: "no-store"}).then(r => r.ok ? r.json() : []).then(arr => { if (Array.isArray(arr) && arr.length) { extraRepo = arr; rebuild(); chips(); render(); } }).catch(() => {});
+</script>
+
+</body>
+</html>
