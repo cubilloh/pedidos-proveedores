@@ -6,14 +6,27 @@
 :root{--bg:#f5f5f4;--card:#fff;--ink:#1c1c1c;--muted:#6b6b6b;--line:#e3e3e1}
 @media (prefers-color-scheme:dark){:root{--bg:#141414;--card:#1f1f1f;--ink:#f1f1f1;--muted:#a0a0a0;--line:#333}}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
-main{max-width:640px;margin:0 auto;padding:48px 16px}
-h1{font-size:26px;margin:0 0 6px}p{color:var(--muted);margin:0 0 28px}
-a.p{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--c);border-radius:10px;padding:18px 20px;margin-bottom:12px;color:inherit;text-decoration:none}
-a.p:hover{border-color:var(--c)}a.p b{font-size:18px}a.p span{color:var(--muted);font-size:14px}
+main{max-width:680px;margin:0 auto;padding:40px 16px}
+h1{font-size:26px;margin:0 0 6px}p{color:var(--muted);margin:0 0 24px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:24px 0 10px}
+a.p{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--c);border-radius:10px;padding:16px 18px;margin-bottom:10px;color:inherit;text-decoration:none}
+a.p:hover{border-color:var(--c)}a.p b{font-size:17px}a.p span{color:var(--muted);font-size:14px}
+.group{border:1px solid var(--line);border-radius:12px;padding:12px 12px 2px;margin-bottom:10px;background:color-mix(in srgb,var(--card) 60%,transparent)}
+.group h3{margin:2px 4px 10px;font-size:17px}.group h3 small{color:var(--muted);font-weight:400;font-size:13px}
 </style></head><body><main>
 <h1>Pedidos a proveedores</h1><p>Elige el catálogo, marca las cantidades y descarga el pedido en Excel, PDF o texto para WhatsApp.</p>
-<a class="p" href="rojas/" style="--c:#b3152a"><div><b>Rojas Inversiones</b><br><span>Golosinas · 686 productos</span></div><span>→</span></a>
-<a class="p" href="dipo/" style="--c:#1f5fae"><div><b>Grupo Dipo</b><br><span>1.217 productos con código SAP</span></div><span>→</span></a>
-<a class="p" href="roma/" style="--c:#1d6b3a"><div><b>Roma Prince</b><br><span>Pastas, salsas, aceites y atún · 186 presentaciones</span></div><span>→</span></a>
+<h2>Casas</h2>
+<a class="p" href="aracazu/" style="--c:#d0601a"><div><b>Aracazu</b><br><span>Preventa · pedido por código en cada página</span></div><span>→</span></a>
+<div class="group"><h3>Insoma <small>· un agente por línea</small></h3>
+<a class="p" href="insoma-unilever/" style="--c:#1f4fbf"><div><b>Unilever</b><br><span>Desodorantes, jabones, cabello, detergentes, Lizano · 324 productos</span></div><span>→</span></a>
+<a class="p" href="insoma-kc/" style="--c:#1d7a3a"><div><b>Kimberly-Clark</b><br><span>Huggies, Kotex, Scott, Kleenex · 76 productos</span></div><span>→</span></a>
+<a class="p" href="insoma-cervezas/" style="--c:#b8860b"><div><b>Cervezas AB InBev</b><br><span>Corona, Modelo, Presidente, Busch Light · 32 presentaciones</span></div><span>→</span></a>
+<a class="p" href="insoma-cargill/" style="--c:#8a3b12"><div><b>Cargill</b><br><span>Alimento para perros y gatos · 36 productos</span></div><span>→</span></a>
+</div>
+<a class="p" href="diquique/" style="--c:#7a3fc0"><div><b>Diquique</b><br><span>Viena, Fab, Zagaz, Olimpo y más · 100 fotos</span></div><span>→</span></a>
+<h2>Otros proveedores</h2>
 <a class="p" href="daring/" style="--c:#0f6e6e"><div><b>Daring (Astúa Pirie)</b><br><span>Abarrotes, licores y cervezas · 171 productos</span></div><span>→</span></a>
+<a class="p" href="dipo/" style="--c:#1f5fae"><div><b>Grupo Dipo</b><br><span>1.217 productos con código SAP</span></div><span>→</span></a>
+<a class="p" href="rojas/" style="--c:#b3152a"><div><b>Rojas Inversiones</b><br><span>Golosinas · 686 productos</span></div><span>→</span></a>
+<a class="p" href="roma/" style="--c:#1d6b3a"><div><b>Roma Prince</b><br><span>Pastas, salsas, aceites y atún · 186 presentaciones</span></div><span>→</span></a>
 </main></body></html>

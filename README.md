@@ -7,11 +7,15 @@ productos, marcar cantidades y descargar el pedido en Excel, PDF o texto para Wh
 
 ```
 index.html        Página de inicio (lista de proveedores)
-lib/              Librerías Excel/PDF, pedido-export.js (formato del pedido) y agregar-productos.js
+lib/              tienda.js/.css (plantilla de las tiendas nuevas), librerías Excel/PDF, pedido-export.js (formato del pedido) y agregar-productos.js
 rojas/            Rojas Inversiones (golosinas, con precios)
 dipo/             Grupo Dipo (código SAP, sin precios)
 roma/             Roma Prince (marcas propias; fotos enlazadas a romaprince.com)
 daring/           Inversiones Daring del Cedral (lista armada con facturas)
+aracazu/          Aracazu preventa (páginas del catálogo + código y cantidad)
+insoma-unilever/  Insoma – Unilever        insoma-kc/        Insoma – Kimberly-Clark
+insoma-cervezas/  Insoma – Cervezas        insoma-cargill/   Insoma – Cargill (mascotas)
+diquique/         Diquique (fotos del agente + nota por producto)
   index.html
   extra.json      Productos agregados a mano (ver abajo)
 .nojekyll         Le indica a GitHub Pages que publique los archivos tal cual
