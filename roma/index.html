@@ -164,10 +164,10 @@ function matches(i) {
 function itemHTML(i) {
   const n = order[i.id] || 0;
   return `<article class="card${n>0?" on":""}" data-id="${i.id}">
-    <button class="ph" data-zoom="${i.id}" aria-label="Ver foto de ${esc(i.g)}"><img loading="lazy" src="${i.img}" alt="${esc(i.g)}" onerror="this.parentNode.classList.add('err')"><span class="noimg">Foto no disponible sin internet</span></button>
+    <button class="ph" data-zoom="${i.id}" aria-label="Ver foto de ${esc(i.g)}">${i.img ? `<img loading="lazy" src="${i.img}" alt="${esc(i.g)}" onerror="this.parentNode.classList.add('err')"><span class="noimg">Foto no disponible sin internet</span>` : `<span class="noimg" style="display:block">Sin foto</span>`}</button>
     <div class="cb">
       <div class="name">${esc(i.g)}</div>
-      <div class="sub"><span class="price">${esc(i.sz)}</span><span>${esc(i.b)}</span></div>
+      <div class="sub"><span class="price">${esc(i.sz)}</span><span>${i.x ? `<span class="xtag">Agregado</span>` : esc(i.b)}</span></div>
       <div class="step"><button data-d="-1" aria-label="Menos" ${n>0?"":"disabled"}>−</button><input id="q-${i.id}" inputmode="numeric" value="${n||""}" placeholder="0" aria-label="Cantidad de ${esc(i.g)} ${esc(i.sz)}"><button data-d="1" aria-label="Más">+</button></div>
     </div></article>`;
 }
@@ -272,5 +272,9 @@ function askClear(){ $("#clearBox").innerHTML = `<span>¿Borrar todo el pedido?<
 chips(); render();
 </script>
 
+<script>window.PEDIDO = {proveedor: "Roma Prince", filas: () => lines().map(l => ({codigo: l.code || "", producto: l.x ? l.g : l.b + " " + l.g, presentacion: l.sz, cantidad: l.q}))};</script>
+<script src="../lib/pedido-export.js"></script>
+<script>window.EXTRA = {clave: "roma-extra-v1", categorias: () => BRANDS.filter(c => c !== "Todas"), agregarCategoria: c => BRANDS.push(c), refrescar: () => { chips(); render(); }, quitar: id => { const k = ITEMS.findIndex(i => i.id === id); if (k >= 0) ITEMS.splice(k, 1); delete byId[id]; delete order[id]; try { localStorage.setItem(KEY, JSON.stringify(order)); } catch (e) {} render(); }, aItem: e => { const it = {id: e.id, c: e.c, b: e.c, g: e.n, sz: e.pres || "", img: "", code: e.code || "", x: true}; ITEMS.push(it); byId[e.id] = it; }};</script>
+<script src="../lib/agregar-productos.js"></script>
 </body>
 </html>

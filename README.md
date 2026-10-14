@@ -7,7 +7,7 @@ productos, marcar cantidades y descargar el pedido en Excel, PDF o texto para Wh
 
 ```
 index.html        Página de inicio (lista de proveedores)
-lib/              Librerías para generar Excel y PDF (SheetJS, jsPDF)
+lib/              Librerías Excel/PDF, pedido-export.js (formato del pedido) y agregar-productos.js
 rojas/            Rojas Inversiones (golosinas, con precios)
 dipo/             Grupo Dipo (código SAP, sin precios)
 roma/             Roma Prince (marcas propias; fotos enlazadas a romaprince.com)
@@ -17,14 +17,17 @@ daring/           Inversiones Daring del Cedral (lista armada con facturas)
 .nojekyll         Le indica a GitHub Pages que publique los archivos tal cual
 ```
 
-## Productos agregados a mano (Daring)
+## Productos agregados a mano (todas las tiendas)
 
-En la página, "+ Agregar producto" guarda productos nuevos en el navegador
-(localStorage). Para que queden para todos los dispositivos:
+Cada tienda tiene "+ Agregar producto". Lo que agregas queda guardado en ese
+navegador (localStorage). Para que quede en todos los dispositivos:
 
 1. En "+ Agregar producto", toca **Descargar extra.json**.
-2. Reemplaza `daring/extra.json` en esta carpeta con el archivo descargado.
-3. `git add . && git commit -m "Agrega productos a Daring" && git push`
+2. Reemplaza el `extra.json` de la carpeta de ese proveedor
+   (`rojas/extra.json`, `dipo/extra.json`, `roma/extra.json` o `daring/extra.json`).
+3. `git add . && git commit -m "Agrega productos" && git push`
+
+El código común está en `lib/agregar-productos.js` (Rojas, Dipo y Roma; Daring tiene el suyo).
 
 ## Cómo actualizar
 

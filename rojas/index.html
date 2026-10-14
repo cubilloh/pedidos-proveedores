@@ -111,7 +111,7 @@ main{padding-block:14px}
   </div>
 </header>
 <main class="wrap" id="list"></main>
-<div class="wrap disc">Precios tomados del catálogo de golosinas de Rojas Inversiones Distribuidora. Confirme con el proveedor antes de enviar el pedido. El pedido en curso se guarda en este navegador.</div>
+<div class="wrap disc">Productos del catálogo de golosinas de Rojas Inversiones Distribuidora. El pedido en curso se guarda en este navegador.</div>
 <div class="bar"><div class="wrap">
   <div class="sum"><b id="bTotal">₡0</b><small id="bInfo">Nada seleccionado aún</small></div>
   <button class="btn" id="open" disabled>Revisar pedido</button>
@@ -170,7 +170,7 @@ function itemHTML(i) {
     <button class="ph" data-zoom="${i.id}" aria-label="Ver foto de ${esc(i.n)}">${src?`<img src="${src}" alt="${esc(i.n)}">`:`<span class="ld"></span>`}</button>
     <div class="cb">
       <div class="name">${esc(i.v || i.g)}</div>
-      <div class="sub"><span>${esc(i.pr)}</span><span class="price">${fmt(i.px)}</span></div>
+      <div class="sub"><span>${esc(i.pr)}</span></div>
       <div class="step"><button data-d="-1" aria-label="Menos" ${o.q>0?"":"disabled"}>−</button><input id="q-${i.id}" inputmode="numeric" value="${o.q||""}" placeholder="0" aria-label="Cantidad de ${esc(i.n)}"><button data-d="1" aria-label="Más">+</button></div>
     </div></article>`;
 }
@@ -179,7 +179,7 @@ function render() {
   const fams = []; const idx = {};
   vis.forEach(i => { const k = famKey(i); if (!(k in idx)) { idx[k] = fams.length; fams.push({k, f:i, list:[]}); } fams[idx[k]].list.push(i); });
   $("#list").innerHTML = fams.length ? fams.map(F => `<section class="sec">
-      <h2>${esc(F.list.length > 1 || F.f.v ? F.f.g : F.f.n)} <small>${esc(F.f.pr)} · ${fmt(F.f.px)}${F.list.length>1?" · "+F.list.length+" opciones":""}</small> <button class="pgl" data-p="${F.f.pg}">pág. ${F.f.pg}</button></h2>
+      <h2>${esc(F.list.length > 1 || F.f.v ? F.f.g : F.f.n)} <small>${esc(F.f.pr)}${F.list.length>1?" · "+F.list.length+" opciones":""}</small> ${F.f.pg ? `<button class="pgl" data-p="${F.f.pg}">pág. ${F.f.pg}</button>` : `<span class="xtag">Agregado</span>`}</h2>
       <div class="grid">${F.list.map(itemHTML).join("")}</div></section>`).join("")
     : `<div class="empty">${only?"Todavía no has agregado productos.":"No hay productos que coincidan con la búsqueda."}</div>`;
   $("#count").textContent = vis.length + " de " + ITEMS.length + " productos";
@@ -196,10 +196,10 @@ async function loadPhotos() {
 function lines() { return ITEMS.filter(i => order[i.id] && order[i.id].q > 0).map(i => ({...i, q: order[i.id].q, note: order[i.id].note || ""})); }
 function totals() {
   const L = lines(); const t = L.reduce((s,l)=>s+l.q*l.px,0); const u = L.reduce((s,l)=>s+l.q,0);
-  $("#bTotal").textContent = fmt(t);
+  $("#bTotal").textContent = u + (u === 1 ? " unidad" : " unidades");
   $("#bInfo").textContent = L.length ? `${L.length} producto${L.length>1?"s":""} · ${u} bulto${u>1?"s":""}` : "Nada seleccionado aún";
   $("#open").disabled = !L.length;
-  $("#oTotal").textContent = fmt(t);
+  $("#oTotal").textContent = u + " unidades";
   $("#oInfo").textContent = `${L.length} productos · ${u} bultos`;
 }
 function setQty(id, n, rerenderRow = true) {
@@ -234,9 +234,9 @@ $("#lb").addEventListener("click", () => $("#lb").hidden = true);
 function drawOrder() {
   const L = lines();
   $("#olist").innerHTML = L.length ? L.map(l => `<div class="oi" data-id="${l.id}">
-    <div><div class="name">${esc(l.n)}</div><div class="sub">${esc(l.pr)} · ${fmt(l.px)} c/u · pág. ${l.pg}</div>${l.note?`<div class="var">${esc(l.note)}</div>`:""}</div>
+    <div><div class="name">${esc(l.n)}</div><div class="sub">${esc([l.pr, l.pg ? "pág. " + l.pg : "agregado"].filter(Boolean).join(" · "))}</div>${l.note?`<div class="var">${esc(l.note)}</div>`:""}</div>
     <div class="step"><button data-d="-1" aria-label="Menos">−</button><input id="o-${l.id}" inputmode="numeric" value="${l.q}" aria-label="Cantidad"><button data-d="1" aria-label="Más">+</button></div>
-    <div class="price">${fmt(l.q*l.px)}</div></div>`).join("") : `<div class="empty">El pedido está vacío.</div>`;
+    <div></div></div>`).join("") : `<div class="empty">El pedido está vacío.</div>`;
   ["#xlsx","#pdf","#copy","#clear"].forEach(s => $(s).disabled = !L.length);
 }
 function openOrder(){ drawOrder(); $("#msg").textContent=""; $("#fallback").hidden = true; resetClear(); $("#ov").hidden = false; $("#close").focus(); }
@@ -296,5 +296,9 @@ function askClear(){ $("#clearBox").innerHTML = `<span>¿Borrar todo el pedido?<
 chips(); render(); loadPhotos();
 </script>
 
+<script>window.PEDIDO = {proveedor: "Rojas Inversiones", filas: () => lines().map(l => ({codigo: l.code || "", producto: l.n, presentacion: l.pr, cantidad: l.q}))};</script>
+<script src="../lib/pedido-export.js"></script>
+<script>window.EXTRA = {clave: "rojas-extra-v1", categorias: () => CATS.filter(c => c !== "Todas"), agregarCategoria: c => CATS.push(c), refrescar: () => { chips(); render(); }, quitar: id => { const k = ITEMS.findIndex(i => i.id === id); if (k >= 0) ITEMS.splice(k, 1); delete byId[id]; delete order[id]; try { localStorage.setItem(KEY, JSON.stringify(order)); } catch (e) {} render(); }, aItem: e => { const it = {id: e.id, pg: null, code: e.code || "", n: e.n, g: e.n, v: "", pr: e.pres || "", px: 0, c: e.c, x: true}; ITEMS.push(it); byId[e.id] = it; }};</script>
+<script src="../lib/agregar-productos.js"></script>
 </body>
 </html>
