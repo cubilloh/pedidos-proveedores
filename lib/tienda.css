@@ -81,3 +81,12 @@ main{padding-block:12px}
 .lb{position:fixed;inset:0;z-index:50;background:rgba(5,8,12,.88);display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
 .lb img{max-height:100%;max-width:100%;border-radius:6px;background:#fff}
 @media (max-width:560px){h1{font-size:20px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.row,.oi{grid-template-columns:minmax(0,1fr) 112px}.ln{grid-template-columns:minmax(0,1fr) 112px auto}}
+.var{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:6px;align-items:center;font-size:13px}
+.var .step{margin:0}
+.verpg{border:1px solid var(--line);background:var(--surface);color:var(--accent);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;cursor:zoom-in;text-transform:none}
+.row.rv{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)}
+.vlist{display:flex;flex-direction:column;gap:6px}
+.vlist .var{grid-template-columns:minmax(0,1fr) 120px}
+.banner.pg img{max-height:520px}
+details.pgd{margin-bottom:10px}details.pgd summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:13px;padding:4px 0}
+@media (max-width:560px){.row.rv{grid-template-columns:1fr}.vlist .var{grid-template-columns:minmax(0,1fr) 112px}}
