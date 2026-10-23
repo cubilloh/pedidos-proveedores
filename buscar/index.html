@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Buscar en todos los proveedores</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f5f5f4;--card:#fff;--ink:#1c1c1c;--muted:#6b6b6b;--line:#e3e3e1;--acc:#1f5fae}
+@media (prefers-color-scheme:dark){:root{--bg:#141414;--card:#1f1f1f;--ink:#f1f1f1;--muted:#a0a0a0;--line:#333}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:16px 16px 60px}
+.back{display:inline-block;color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;margin-bottom:8px}
+h1{font-size:24px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 14px;font-size:14px}
+.sb{position:sticky;top:0;background:var(--bg);padding:8px 0 10px;z-index:5}
+input{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit}
+.st{color:var(--muted);font-size:13px;margin-top:6px}
+.prov{margin:18px 0 6px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-left:5px solid var(--c,var(--acc));padding-left:10px}
+.prov b{font-size:17px}.prov a{color:var(--c,var(--acc));font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+.list{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.r{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-top:1px solid var(--line);color:inherit;text-decoration:none}
+.r:first-child{border-top:0}.r:hover{background:color-mix(in srgb,var(--c,var(--acc)) 8%,transparent)}
+.ph{width:56px;height:56px;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ph img{max-width:100%;max-height:100%;object-fit:contain}.ph span{font-size:10px;color:#999}
+.n{font-weight:600;line-height:1.25}.d{color:var(--muted);font-size:13px}
+.code{font:500 12px ui-monospace,Menlo,monospace;color:var(--muted);text-align:right}
+.more{display:block;text-align:center;padding:9px;font-size:13px;color:var(--c,var(--acc));text-decoration:none;border-top:1px solid var(--line);font-weight:600}
+.empty{color:var(--muted);text-align:center;padding:40px 0}
+</style></head><body><main>
+<a class="back" href="../">← Proveedores</a>
+<h1>Buscar en todos los proveedores</h1>
+<p class="sub">Escribe un producto, marca o código y te muestra en qué proveedor está. Toca un resultado para abrir esa tienda con la búsqueda lista.</p>
+<div class="sb"><input type="search" id="q" placeholder="Ej: cloro, salsa de tomate, takis, 1041183…" autocomplete="off" autofocus>
+<div class="st" id="st">Cargando catálogos…</div></div>
+<div id="res"></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm=s=>String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+let DB=[],STORES=[],loaded=0;
+
+function grabJSON(h,start){ // returns parsed JSON value starting at index of [ or {
+  const open=h[start],close=open==="["?"]":"}";let d=0,inS=false,q="",i=start;
+  for(;i<h.length;i++){const c=h[i];
+    if(inS){if(c==="\\"){i++;continue}if(c===q)inS=false;continue}
+    if(c==='"'||c==="'"){inS=true;q=c;continue}
+    if(c===open)d++;else if(c===close){d--;if(!d)break}}
+  return JSON.parse(h.slice(start,i+1));
+}
+function imgUrl(folder,f){if(!f)return"";if(/^https?:/.test(f))return f;return folder+(f.includes("/")||f.includes(".")?f:"img/"+f+".jpg")}
+function parse(store,h){
+  const out=[],add=(n,pr,code,img,c)=>out.push({s:store,n,pr:pr||"",code:code||"",img:img||"",c:c||"",k:norm([n,pr,code,c].join(" "))});
+  let i=h.indexOf("window.TIENDA = ");
+  if(i>=0){const T=grabJSON(h,h.indexOf("{",i));
+    for(const s of T.secciones||[])for(const it of s.items||[]){
+      const im=imgUrl(store.href,it.img);
+      if(it.vars&&it.vars.length)for(const v of it.vars)add(it.n,v.pr,v.code,im,s.c||s.t);
+      else add(it.n,it.pr,it.code,im,s.c||s.t);}
+    return out;}
+  for(const name of["ITEMS","BASE"]){const m=h.match(new RegExp("(const|let|var)\\s+"+name+"\\s*=\\s*\\[\\{"));
+    if(m){const arr=grabJSON(h,m.index+m[0].length-2);
+      for(const it of arr){const n=it.n||[it.b,it.g,it.v].filter(Boolean).join(" ");
+        add(n,it.pr||it.sz||"",it.code||it.sap||"",/^https?:/.test(it.img||"")?it.img:"",it.c);}
+      return out;}}
+  return out;
+}
+async function init(){
+  const home=await (await fetch("../",{cache:"no-store"})).text();
+  const doc=new DOMParser().parseFromString(home,"text/html");
+  STORES=[...doc.querySelectorAll("a.p")].map(a=>{const g=a.closest(".group"),b=a.querySelector("b")?.textContent.trim()||a.getAttribute("href");
+    const gt=g?.querySelector("h3")?.childNodes[0]?.textContent.trim();
+    return{href:"../"+a.getAttribute("href").replace(/^\.?\//,""),name:gt?gt+" – "+b:b,color:(a.getAttribute("style")||"").match(/--c:\s*([^;"]+)/)?.[1]||""}}).filter(s=>!s.href.includes("buscar"));
+  await Promise.all(STORES.map(async st=>{
+    try{const h=await (await fetch(st.href+"index.html",{cache:"no-store"})).text();DB.push(...parse(st,h));}catch(e){st.err=1}
+    loaded++;$("#st").textContent=`Cargando catálogos… ${loaded}/${STORES.length}`;}));
+  $("#st").textContent=`${DB.length.toLocaleString("es-CR")} productos de ${STORES.filter(s=>!s.err).length} proveedores`;
+  const q0=new URLSearchParams(location.search).get("q");if(q0){$("#q").value=q0}
+  run();
+}
+function run(){
+  const q=$("#q").value.trim(),r=$("#res");
+  if(q.length<2){r.innerHTML=DB.length?`<div class="empty">Escribe al menos 2 letras para buscar.</div>`:"";return}
+  const t=norm(q).split(/\s+/);
+  const hits=DB.filter(x=>t.every(w=>x.k.includes(w)));
+  if(!hits.length){r.innerHTML=`<div class="empty">No encontré “${esc(q)}” en ningún proveedor.</div>`;return}
+  const by=new Map();for(const h of hits){if(!by.has(h.s))by.set(h.s,[]);by.get(h.s).push(h)}
+  const LIM=8;
+  r.innerHTML=[...by].sort((a,b)=>b[1].length-a[1].length).map(([s,L])=>{
+    const link=s.href+"?q="+encodeURIComponent(q);
+    return `<div style="--c:${esc(s.color)}"><div class="prov"><b>${esc(s.name)} <span class="d">· ${L.length}</span></b><a href="${link}">Abrir tienda →</a></div>
+    <div class="list">${L.slice(0,LIM).map(x=>`<a class="r" href="${link}"><div class="ph">${x.img?`<img loading="lazy" src="${esc(x.img)}" alt="">`:"<span>sin foto</span>"}</div>
+      <div><div class="n">${esc(x.n)}</div><div class="d">${esc(x.pr)}${x.pr&&x.c?" · ":""}${esc(x.c)}</div></div><div class="code">${esc(x.code)}</div></a>`).join("")}
+    ${L.length>LIM?`<a class="more" href="${link}">Ver los ${L.length} resultados en ${esc(s.name)} →</a>`:""}</div></div>`}).join("");
+  $("#st").textContent=`${hits.length} resultados en ${by.size} proveedores`;
+}
+let tm;$("#q").addEventListener("input",()=>{clearTimeout(tm);tm=setTimeout(()=>{run();const u=new URL(location);u.searchParams.set("q",$("#q").value);history.replaceState(null,"",u)},150)});
+init().catch(e=>{$("#st").textContent="No se pudieron cargar los catálogos. Abre esta página desde la dirección de GitHub."});
+</script>
+</body></html>
