@@ -7,19 +7,23 @@ productos, marcar cantidades y descargar el pedido en Excel, PDF o texto para Wh
 
 ```
 index.html        Página de inicio (lista de proveedores)
-lib/              tienda.js/.css (plantilla de las tiendas nuevas), librerías Excel/PDF, pedido-export.js (formato del pedido) y agregar-productos.js
-rojas/            Rojas Inversiones (golosinas, con precios)
-dipo/             Grupo Dipo (código SAP, sin precios)
-roma/             Roma Prince (marcas propias; fotos enlazadas a romaprince.com)
-daring/           Inversiones Daring del Cedral (lista armada con facturas)
-aracazu/          Aracazu preventa (páginas del catálogo + código y cantidad)
-insoma-unilever/  Insoma – Unilever        insoma-kc/        Insoma – Kimberly-Clark
-insoma-cervezas/  Insoma – Cervezas        insoma-cargill/   Insoma – Cargill (mascotas)
-diquique/         Diquique (fotos del agente + nota por producto)
-  index.html
-  extra.json      Productos agregados a mano (ver abajo)
+buscar/           Buscador general: busca un producto en todos los proveedores
+lib/              Código común:
+                    tienda.js / tienda.css    plantilla de las tiendas (cada una define window.TIENDA)
+                    pedido-export.js          Excel, PDF, WhatsApp y "Ver en pantalla"
+                    agregar-productos.js      botón "+ Agregar producto"
+                    xlsx / jspdf              librerías de Excel y PDF
+<proveedor>/      Una carpeta por proveedor (armenio, coca-cola, wamase, pepsico, kimby, …)
+  index.html        Catálogo (window.TIENDA = {...})
+  img/              Fotos de los productos
+  extra.json        Productos agregados a mano (ver abajo)
+rojas/ dipo/ roma/ daring/   Tiendas antiguas con su propio código (no usan tienda.js)
 .nojekyll         Le indica a GitHub Pages que publique los archivos tal cual
+.gitignore        Bloquea archivos PDF para que no se suban documentos personales
 ```
+
+Cada producto debe tener un `id` único dentro de su tienda. Si dos productos
+comparten `id`, se marcan juntos y las tarjetas se mezclan.
 
 ## Productos agregados a mano (todas las tiendas)
 
@@ -27,17 +31,17 @@ Cada tienda tiene "+ Agregar producto". Lo que agregas queda guardado en ese
 navegador (localStorage). Para que quede en todos los dispositivos:
 
 1. En "+ Agregar producto", toca **Descargar extra.json**.
-2. Reemplaza el `extra.json` de la carpeta de ese proveedor
-   (`rojas/extra.json`, `dipo/extra.json`, `roma/extra.json` o `daring/extra.json`).
+2. Reemplaza el `extra.json` de la carpeta de ese proveedor (por ejemplo `kimby/extra.json`).
 3. `git add . && git commit -m "Agrega productos" && git push`
 
-El código común está en `lib/agregar-productos.js` (Rojas, Dipo y Roma; Daring tiene el suyo).
+El código común está en `lib/agregar-productos.js` (todas las tiendas menos Daring, que tiene el suyo).
 
 ## Cómo actualizar
 
 ```bash
 git pull
 # ...reemplazar o agregar archivos...
+git status      # revisa que no vaya nada personal antes de subir
 git add .
 git commit -m "Describe el cambio"
 git push        # GitHub Pages publica en 1-2 minutos
